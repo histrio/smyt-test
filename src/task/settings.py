@@ -20,11 +20,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SECRET_KEY = 'm)=o@-o!h!mz&3$4j9j5xcr+v&++a!$dltq1b2x(e#uw6x8*&h'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 TEMPLATE_DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['spot.falseprotagonist.me', ]
 
 
 # Application definition
@@ -87,4 +87,4 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, '../static/')
+STATIC_ROOT = os.path.join(BASE_DIR, '../static')
