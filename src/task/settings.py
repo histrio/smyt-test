@@ -20,11 +20,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SECRET_KEY = 'm)=o@-o!h!mz&3$4j9j5xcr+v&++a!$dltq1b2x(e#uw6x8*&h'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 TEMPLATE_DEBUG = True
 
-ALLOWED_HOSTS = ['spot.falseprotagonist.me', ]
+ALLOWED_HOSTS = []
 
 
 # Application definition
