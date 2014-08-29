@@ -30,7 +30,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 PROJECT_APPS = (
-  'task.smyt',
+    'task.smyt',
 )
 
 INSTALLED_APPS = (
@@ -42,6 +42,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
 
     'gunicorn',
+    'south',
 ) + PROJECT_APPS
 
 MIDDLEWARE_CLASSES = (

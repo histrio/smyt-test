@@ -5,8 +5,15 @@ users:
         - {id: paycheck, title: Зарплата, type: int}
         - {id: date_joined, title: Дата поступления на работу, type: date}
 rooms:
-    title: Комнаты
+    title: Комнат
     fields:
         - {id: department, title: Отдел, type: char}     
         - {id: spots, title: Вместимость, type: int}
+
+languages:
+    title: Языки
+    fields:
+        - {id: department, title: Отдел, type: char}     
+        - {id: spots, title: Вместимость, type: int}
+
 
