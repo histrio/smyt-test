@@ -81,14 +81,14 @@
 
 	<header>
 		
-		<h1><a href="/">Page Title</a></h1>
+		<h1><a href="/">Smyt Task</a></h1>
 		
 		<nav>
 		
 			<ol>
-				<li><a href="">Nav Link 1</a></li>
-				<li><a href="">Nav Link 2</a></li>
-				<li><a href="">Nav Link 3</a></li>
+				<li><a href="">Пользователи</a></li>
+				<li><a href="">Комнаты</a></li>
+				<li><a href="">Языки</a></li>
 			</ol>
 		
 		</nav>
@@ -97,13 +97,54 @@
 	
 	<article>
 		
-		<h1>Article Header</h1>
+		<h1>Пользователи</h1>
+        <table>
+            <tr>
+                <th>id</th>
+                <th>Имя</th>
+                <th>Зарплата</th>
+                <th>Дата поступления на работу</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>name1</td>
+                <td>100</td>
+                <td>21.03.1222</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>name2</td>
+                <td>101</td>
+                <td>22.03.1222</td>
+            </tr>
+        </table>
+
+
+
+        <form action="">
+        <fieldset>
+        <legend>Новый пользователь</legend>
+
+        <div>
+          <label for="name">Имя:</label>
+          <input name="name" type="text" required>
+        </div>
+        <div>
+          <label for="email">Зарплата:</label>
+
+          <input name="email" type="email" required>
+        </div>
+        <div>
+          <label for="message">Дата поступления:</label>
+          <input name="date" type="date" required>
+        </div>
+        <div>
+          <input name="send" type="submit" value="Send">
+        </div>
+        </fieldset>
+        </form>
+
 		
-		<p>Etiam pretium odio eu mi convallis vitae varius neque pharetra. Nulla vestibulum nisi ut sem cursus sed mattis nisi egestas.</p>
-		
-		<h2>Article Subhead</h2>
-		
-		<p>Vestibulum lacus erat, volutpat vel dignissim at, fringilla ut felis.</p>
 	
 	</article>
 	
@@ -115,7 +156,7 @@
 	
 	<footer>
 		
-		<p><small>&copy; Copyright Your Name Here 2014. All Rights Reserved.</small></p>
+		<p><small>&copy; Copyright 2014. All Rights Reserved.</small></p>
 		
 	</footer>
 
@@ -129,23 +170,6 @@
 <!-- don't forget to concatenate and minify if needed -->
 <script src="assets/js/functions.js"></script>
 
-<!-- Asynchronous google analytics; this is the official snippet.
-	 Replace UA-XXXXXX-XX with your site's ID and uncomment to enable.
-	 
-<script>
-
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-XXXXXX-XX']);
-  _gaq.push(['_trackPageview']);
-
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
-
-</script>
--->
   
 </body>
 </html>
