@@ -1,4 +1,1 @@
-from .smytmodels.yaml import *
-
-print RoomsModel
-print UsersModel
+from smytmodels.yaml import *

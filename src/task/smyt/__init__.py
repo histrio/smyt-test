@@ -1,7 +1,7 @@
 """
 File: __init__.py
 Author: Rinat F Sabitov
-Description:
+Description: hail pep302
 """
 
 import imp
@@ -11,13 +11,35 @@ import yaml
 
 from django.db import models
 from django.contrib.admin import ModelAdmin, site
+from functools import partial
+
+
+class SmytException(Exception):
+    pass
+
+
+def get_field(id, title, type):
+    mapping = {
+        'char': partial(models.CharField, max_length=20, verbose_name=title),
+        'int': models.IntegerField,
+        'date': models.DateField,
+    }
+    try:
+        field = mapping[type](verbose_name=title)
+    except KeyError:
+        raise SmytException('Unkown field type: expected int/char/date, got `%s`' % type )
+    return field
 
 
 def get_attr(title, fields):
+    """ Returns dict with appropriate django model fields.
+    """
     result = {
         '__module__': 'task.smyt.models',
     }
-    result['name'] = models.CharField(max_length=20)
+    for field in fields:
+        #result['name'] =
+        result[field['id']] = get_field(**field)
 
     meta = type('Meta', (), {
         'verbose_name': title,
@@ -27,6 +49,10 @@ def get_attr(title, fields):
 
 
 class YamlModelsLoader(object):
+    """ Module finder/loader.
+    Looking for imports which ends with `yaml` and
+    try to parse it for the great good
+    """
 
     yaml_filename = None
 
@@ -42,25 +68,29 @@ class YamlModelsLoader(object):
     def get_models(self):
         result = {}
         with open(self.yaml_filename, 'r') as f:
-            data = yaml.load(f)
+            try:
+                data = yaml.load(f)
+            except yaml.YAMLError as err:
+                raise SmytException('YAML file parsing error: %s' % err)
+
         for table, params in data.items():
             model_name = '%sModel' % table.capitalize()
-            attrs = get_attr(**params)
+            try:
+                attrs = get_attr(**params)
+            except TypeError as err:
+                raise SmytException('Invalid yaml file format.')
             model = type(model_name, (models.Model, ), attrs)
             result[model_name] = model
 
         import admin
+        #sorry, but monkeypatching
         for model in result.values():
             model_admin = type(model_name + 'Admin', (ModelAdmin, ), {
                 '__module__': 'task.smyt.admin',
             })
             setattr(admin, model_name + 'Admin', model_admin)
             site.register(model, model_admin)
-            print dir(admin)
         return result
-
-    def get_admin(self):
-        pass
 
     def load_module(self, fullname):
         if fullname in sys.modules:
@@ -77,4 +107,5 @@ class YamlModelsLoader(object):
         sys.modules[yaml_fullname] = yaml_mod
         return mod
 
+# activate import hook
 sys.meta_path.append(YamlModelsLoader())
