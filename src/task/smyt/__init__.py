@@ -27,7 +27,8 @@ def get_field(id, title, type):
     try:
         field = mapping[type](verbose_name=title)
     except KeyError:
-        raise SmytException('Unkown field type: expected int/char/date, got `%s`' % type )
+        raise SmytException('Unkown field type: expected '
+            'int/char/date, got `%s`' % type)
     return field
 
 
@@ -38,8 +39,10 @@ def get_attr(title, fields):
         '__module__': 'task.smyt.models',
     }
     for field in fields:
-        #result['name'] =
-        result[field['id']] = get_field(**field)
+        try:
+            result[field['id']] = get_field(**field)
+        except KeyError:
+            raise SmytException("Field's `id` not found")
 
     meta = type('Meta', (), {
         'verbose_name': title,
@@ -83,7 +86,7 @@ class YamlModelsLoader(object):
             result[model_name] = model
 
         import admin
-        #sorry, but monkeypatching
+        # sorry, but monkeypatching
         for model in result.values():
             model_admin = type(model_name + 'Admin', (ModelAdmin, ), {
                 '__module__': 'task.smyt.admin',
@@ -107,5 +110,5 @@ class YamlModelsLoader(object):
         sys.modules[yaml_fullname] = yaml_mod
         return mod
 
-# activate import hook
+# activate import hook !
 sys.meta_path.append(YamlModelsLoader())
