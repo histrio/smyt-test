@@ -43,7 +43,6 @@ INSTALLED_APPS = (
 
     'gunicorn',
     'south',
-    'task.smyt',
 ) + PROJECT_APPS
 
 MIDDLEWARE_CLASSES = (

@@ -50,6 +50,7 @@ def get_attr(title, fields):
     return result
 
 
+
 class YamlModelsLoader(object):
     """ Module finder/loader.
     Looking for imports which ends with `yaml` and
@@ -88,15 +89,18 @@ class YamlModelsLoader(object):
             model = type(model_name, (models.Model, ), attrs)
             result[model_name] = model
 
-        #import admin
-        ## sorry, but monkeypatching
-        #for model in result.values():
-            #model_admin = type(model_name + 'Admin', (ModelAdmin, ), {
-                #'__module__': 'task.smyt.admin',
-            #})
-            #setattr(admin, model_name + 'Admin', model_admin)
-            #site.register(model, model_admin)
         return result
+
+    def get_admin(self, models_dict):
+        result = {}
+        for model_name, model in models_dict.items():
+            model_admin = type(model_name + 'Admin', (ModelAdmin, ), {
+                '__module__': self.fullname+'.yaml.admin',
+            })
+            result[model_name + 'Admin'] = model_admin
+            site.register(model, model_admin)
+        return result
+
 
     def load_module(self, fullname):
         if fullname in sys.modules:
@@ -105,20 +109,27 @@ class YamlModelsLoader(object):
         mod = imp.new_module(fullname)
         mod.__loader__ = self
         mod.__file__ = self.yaml_filename
-        mod.__path__ = []
         sys.modules[fullname] = mod
 
         yaml_mod = imp.new_module(yaml_fullname)
         yaml_mod.__file__ = self.yaml_filename
-        #yaml_mod.__dict__.update(self.get_models())
         mod.yaml = yaml_mod
         sys.modules[yaml_fullname] = yaml_mod
 
         models_mod = imp.new_module(yaml_fullname+'.models')
         models_mod.__file__ = self.yaml_filename
         sys.modules[yaml_fullname+'.models'] = models_mod
-        models_mod.__dict__.update(self.get_models())
+        models_dict = self.get_models()
+        models_mod.__dict__.update(models_dict)
 
+        admin_mod = imp.new_module(yaml_fullname+'.admin')
+        admin_mod.__file__ = self.yaml_filename
+        admin_dict = self.get_admin(models_dict)
+        admin_mod.__dict__.update(admin_dict)
+        sys.modules[yaml_fullname+'.admin'] = admin_mod
+
+        yaml_mod.models = models_mod
+        yaml_mod.admin = admin_mod
         return mod
 
 
