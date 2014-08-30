@@ -63,9 +63,10 @@ class YamlModelsLoader(object):
     def find_module(self, fullname, paths=None):
         for path in (paths or ['./task/', ]):
             self.fullname = fullname
-            self.yaml_filename = os.path.join(
+            filename = os.path.join(
                 path, "%s.yaml" % fullname.rsplit('.')[-1])
-            if os.path.isfile(self.yaml_filename):
+            if os.path.isfile(filename):
+                self.yaml_filename = filename
                 return self
         return None
 
@@ -101,6 +102,16 @@ class YamlModelsLoader(object):
             site.register(model, model_admin)
         return result
 
+    def get_views(self, models_dict):
+        result = {}
+        from django.views.generic import ListView
+        for model_name, model in models_dict.items():
+            list_view = type(model_name+'ListView', (ListView, ), {
+                'model': model
+            })
+            result[model_name+'ListView'] = list_view
+        return result
+
 
     def load_module(self, fullname):
         if fullname in sys.modules:
@@ -116,6 +127,22 @@ class YamlModelsLoader(object):
         mod.yaml = yaml_mod
         sys.modules[yaml_fullname] = yaml_mod
 
+        #def extend_module(module, module_name, attrs):
+            #mod_name = '.'.join(yaml_fullname, module_name)
+            #mod = imp.new_module(mod_name)
+            #sys.modules[mod_name] = mod
+            #mod.__file__ = self.yaml_filename
+            #mod.__dict__.update(attrs if not callable(attrs) else attrs())
+            #setattr(yaml_mod, module_name, mod)
+
+        ##models = self.get_models()
+        #extend_module('models', self.get_models)
+        #extend_module('admin', self.get_admin(models))
+        #extend_module('migrations', {})
+        #extend_module('views', self.get_views(models))
+
+
+
         models_mod = imp.new_module(yaml_fullname+'.models')
         models_mod.__file__ = self.yaml_filename
         sys.modules[yaml_fullname+'.models'] = models_mod
@@ -128,8 +155,24 @@ class YamlModelsLoader(object):
         admin_mod.__dict__.update(admin_dict)
         sys.modules[yaml_fullname+'.admin'] = admin_mod
 
+
+        views_mod = imp.new_module(yaml_fullname+'.views')
+        views_mod.__file__ = self.yaml_filename
+        views_dict = self.get_views(models_dict)
+        views_mod.__dict__.update(views_dict)
+        sys.modules[yaml_fullname+'.views'] = views_mod
+
+        migrations_mod = imp.new_module(yaml_fullname+'.migrations')
+        migrations_mod.__file__ = os.path.join(
+            os.path.dirname(self.yaml_filename),
+            'migrations.__init__.py')
+        print migrations_mod.__file__
+        sys.modules[yaml_fullname+'.migrations'] = migrations_mod
+
         yaml_mod.models = models_mod
         yaml_mod.admin = admin_mod
+        yaml_mod.migrations = migrations_mod
+        yaml_mod.views = views_mod
         return mod
 
 
