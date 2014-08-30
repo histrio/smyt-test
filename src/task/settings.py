@@ -30,7 +30,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 PROJECT_APPS = (
-    'task.smyt',
+    'smytmodels.yaml',
 )
 
 INSTALLED_APPS = (
@@ -43,6 +43,7 @@ INSTALLED_APPS = (
 
     'gunicorn',
     'south',
+    'task.smyt',
 ) + PROJECT_APPS
 
 MIDDLEWARE_CLASSES = (

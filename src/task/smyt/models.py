@@ -1,1 +1,2 @@
-from smytmodels.yaml import *
+from django.db import models
+print '!!!!!!!!!!!!!!!!!!!!!!!!!!'
