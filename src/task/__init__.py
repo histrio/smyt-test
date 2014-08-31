@@ -148,48 +148,10 @@ class YamlModelsLoader(object):
             None, (self.get_models() ,))
         yaml_mod.migrations.__file__ = os.path.join(
             os.path.dirname(self.yaml_filename),
-<<<<<<< HEAD
-            'migrations.__init__.py')
-        sys.modules[yaml_fullname+'.migrations'] = migrations_mod
-
-        yaml_mod.models = models_mod
-        yaml_mod.admin = admin_mod
-        yaml_mod.migrations = migrations_mod
-        yaml_mod.views = views_mod
-=======
             'migrations')
         yaml_mod.views = extend_module('views',
             self.get_views, (self.get_models(), ))
 
-
-        #models_mod = imp.new_module(yaml_fullname+'.models')
-        #models_mod.__file__ = self.yaml_filename
-        #sys.modules[yaml_fullname+'.models'] = models_mod
-        #models_dict = self.get_models()
-        #models_mod.__dict__.update(models_dict)
-
-        #admin_mod = imp.new_module(yaml_fullname+'.admin')
-        #admin_mod.__file__ = self.yaml_filename
-        #admin_dict = self.get_admin(models_dict)
-        #admin_mod.__dict__.update(admin_dict)
-        #sys.modules[yaml_fullname+'.admin'] = admin_mod
-
-
-        #views_mod = imp.new_module(yaml_fullname+'.views')
-        #views_mod.__file__ = self.yaml_filename
-        #views_dict = self.get_views(models_dict)
-        #views_mod.__dict__.update(views_dict)
-        #sys.modules[yaml_fullname+'.views'] = views_mod
-
-        #migrations_mod = imp.new_module(yaml_fullname+'.migrations')
-        #print migrations_mod.__file__
-        #sys.modules[yaml_fullname+'.migrations'] = migrations_mod
-
-        #yaml_mod.models = models_mod
-        #yaml_mod.admin = admin_mod
-        #yaml_mod.migrations = migrations_mod
-        #yaml_mod.views = views_mod
->>>>>>> 40f660570569e6b2bec6b716c916c8429bbf27e8
         return mod
 
 
