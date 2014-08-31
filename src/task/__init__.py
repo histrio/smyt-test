@@ -49,6 +49,17 @@ def get_attr(title, fields):
     result['Meta'] = meta
     return result
 
+from django.core import serializers
+from django.http import HttpResponse
+
+class JsonResponseMixin(object):
+    """ Return json
+    """
+    def render_to_response(self, context):
+        queryset = self.model.objects.all()
+        data = serializers.serialize('json', queryset)
+        return HttpResponse(data, content_type='application/json')
+
 
 class YamlModelsLoader(object):
     """ Module finder/loader.
@@ -103,12 +114,13 @@ class YamlModelsLoader(object):
 
     def get_views(self, models_dict):
         result = {}
-        from django.views.generic import ListView
+        from django.views.generic.list import BaseListView
         for model_name, model in models_dict.items():
-            list_view = type(model_name+'ListView', (ListView, ), {
+            list_view = type(model_name+'ListView', (JsonResponseMixin, BaseListView, ), {
                 'model': model
             })
             result[model_name+'ListView'] = list_view
+            result[model._meta.db_table+'_list_view'] = list_view.as_view()
         return result
 
     def get_urls(self, models_dict):
@@ -117,7 +129,7 @@ class YamlModelsLoader(object):
         patterns = [
             url(r'^$', '%s.views.%s' % (
                 model.__module__.rsplit('.', 1)[0],
-                model_name+'ListView'
+                model._meta.db_table+'_list_view'
             )) for model_name, model in models_dict.items()
         ]
         result = {
@@ -153,10 +165,12 @@ class YamlModelsLoader(object):
 
         yaml_mod.admin = extend_module('admin')
         yaml_mod.admin.__dict__.update(self.get_admin(models_dict))
-        yaml_mod.migrations = extend_module('migrations')
-        yaml_mod.migrations.__file__ = os.path.join(
-            os.path.dirname(self.yaml_filename),
-            'migrations')
+
+        # yaml_mod.migrations = extend_module('migrations')
+        # yaml_mod.migrations.__file__ = os.path.join(
+        #     os.path.dirname(self.yaml_filename),
+        #     'migrations')
+
         yaml_mod.views = extend_module('views')
         yaml_mod.views.__dict__.update(self.get_views(models_dict))
 
