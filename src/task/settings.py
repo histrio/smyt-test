@@ -41,9 +41,11 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'gunicorn',
     'south',
 ) + PROJECT_APPS
+
+if not DEBUG:
+    INSTALLED_APPS += ['gunicorn', ]
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',

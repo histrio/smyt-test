@@ -166,7 +166,6 @@ class YamlModelsLoader(object):
         migrations_mod.__file__ = os.path.join(
             os.path.dirname(self.yaml_filename),
             'migrations.__init__.py')
-        print migrations_mod.__file__
         sys.modules[yaml_fullname+'.migrations'] = migrations_mod
 
         yaml_mod.models = models_mod
