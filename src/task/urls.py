@@ -1,7 +1,10 @@
 import os.path
+from django.db import models
+import json
 from django.conf.urls import patterns, include, url
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import HttpResponse
 
 from django.contrib import admin
 admin.autodiscover()
@@ -13,6 +16,40 @@ urlpatterns = patterns('',
 
     url(r'^admin/', include(admin.site.urls)),
 )
+
+MODELS_CACHE = None
+
+def get_smyt_models():
+    global MODELS_CACHE
+    if MODELS_CACHE is not None:
+        return MODELS_CACHE
+    items = []
+    for mdl in models.get_models(include_auto_created=False):
+        if getattr(mdl, 'is_smyt', False):
+            items.append(mdl)
+    MODELS_CACHE = items
+    return items
+
+
+def smyt_items_json_view(request):
+    items = [{
+        'title': mdl._meta.verbose_name,
+        'url': '/'+mdl._meta.db_table
+    } for mdl in get_smyt_models()]
+    data = json.dumps(items)
+    return HttpResponse(data, mimetype='application/json')
+
+
+urlpatterns += [
+    url(r'^smyt_items/$', smyt_items_json_view),
+]
+
+urlpatterns += [
+  url(r'^smyt_items/%s/' % mdl._meta.db_table, include(
+      mdl.__module__.rsplit('.', 1)[0]+'.urls')) for mdl in get_smyt_models()
+]
+
+
 if settings.DEBUG:
     document_root = os.path.abspath(os.path.join(
         settings.BASE_DIR, '../public_html'))
@@ -20,7 +57,5 @@ if settings.DEBUG:
         document_root=document_root+'/assets')
     urlpatterns += static('/',
         path='index.html',
-        #show_indexes=True,
         document_root=document_root)
-
 

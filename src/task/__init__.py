@@ -18,8 +18,10 @@ class SmytException(Exception):
 
 
 def get_field(id, title, type):
+    """ Return appropriate field or raise error
+    """
     mapping = {
-        'char': partial(models.CharField, max_length=20, verbose_name=title),
+        'char': partial(models.CharField, max_length=20),
         'int': models.IntegerField,
         'date': models.DateField,
     }
@@ -34,15 +36,13 @@ def get_field(id, title, type):
 def get_attr(title, fields):
     """ Returns dict with appropriate django model fields.
     """
-    result = {
-        #'__module__': 'task.smyt.models',
-    }
+    result = {}
     for field in fields:
         try:
             result[field['id']] = get_field(**field)
         except KeyError:
             raise SmytException("Field's `id` not found")
-
+    result['is_smyt'] = True
     meta = type('Meta', (), {
         'verbose_name': title,
     })
@@ -71,8 +71,6 @@ class YamlModelsLoader(object):
         return None
 
     def get_models(self):
-        if self.models_dict is not None:
-            return self.models_dict
         result = {}
         with open(self.yaml_filename, 'r') as f:
             try:
@@ -91,8 +89,6 @@ class YamlModelsLoader(object):
             })
             model = type(model_name, (models.Model, ), attrs)
             result[model_name] = model
-
-        self.models_dict = result
         return result
 
     def get_admin(self, models_dict):
@@ -115,6 +111,20 @@ class YamlModelsLoader(object):
             result[model_name+'ListView'] = list_view
         return result
 
+    def get_urls(self, models_dict):
+        from django.conf.urls import url
+
+        patterns = [
+            url(r'^$', '%s.views.%s' % (
+                model.__module__.rsplit('.', 1)[0],
+                model_name+'ListView'
+            )) for model_name, model in models_dict.items()
+        ]
+        result = {
+            'urlpatterns':patterns
+        }
+        return result
+
 
     def load_module(self, fullname):
         if fullname in sys.modules:
@@ -130,29 +140,28 @@ class YamlModelsLoader(object):
         mod.yaml = yaml_mod
         sys.modules[yaml_fullname] = yaml_mod
 
-        def extend_module(module_name, extender, params=None):
-            if params is None:
-                params = ()
+        def extend_module(module_name):
             mod_name = '.'.join([yaml_fullname, module_name, ])
             mod = imp.new_module(mod_name)
             sys.modules[mod_name] = mod
             mod.__file__ = self.yaml_filename
-            if extender is not None:
-                mod.__dict__.update(extender(*params))
             return mod
 
-        yaml_mod.models = extend_module('models', self.get_models, {})
-        yaml_mod.admin = extend_module('admin',
-            self.get_admin, (self.get_models(), ))
-        yaml_mod.migrations = extend_module('migrations',
-            None, (self.get_models() ,))
+        yaml_mod.models = extend_module('models')
+        models_dict = self.get_models()
+        yaml_mod.models.__dict__.update(models_dict)
+
+        yaml_mod.admin = extend_module('admin')
+        yaml_mod.admin.__dict__.update(self.get_admin(models_dict))
+        yaml_mod.migrations = extend_module('migrations')
         yaml_mod.migrations.__file__ = os.path.join(
             os.path.dirname(self.yaml_filename),
             'migrations')
-        yaml_mod.views = extend_module('views',
-            self.get_views, (self.get_models(), ))
+        yaml_mod.views = extend_module('views')
+        yaml_mod.views.__dict__.update(self.get_views(models_dict))
 
+        yaml_mod.urls = extend_module('urls')
+        yaml_mod.urls.__dict__.update(self.get_urls(models_dict))
         return mod
-
 
 sys.meta_path.append(YamlModelsLoader())
