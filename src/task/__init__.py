@@ -50,7 +50,6 @@ def get_attr(title, fields):
     return result
 
 
-
 class YamlModelsLoader(object):
     """ Module finder/loader.
     Looking for imports which ends with `yaml` and
@@ -59,6 +58,7 @@ class YamlModelsLoader(object):
 
     yaml_filename = None
     fullname = None
+    models_dict = None
 
     def find_module(self, fullname, paths=None):
         for path in (paths or ['./task/', ]):
@@ -71,6 +71,8 @@ class YamlModelsLoader(object):
         return None
 
     def get_models(self):
+        if self.models_dict is not None:
+            return self.models_dict
         result = {}
         with open(self.yaml_filename, 'r') as f:
             try:
@@ -90,6 +92,7 @@ class YamlModelsLoader(object):
             model = type(model_name, (models.Model, ), attrs)
             result[model_name] = model
 
+        self.models_dict = result
         return result
 
     def get_admin(self, models_dict):
@@ -127,52 +130,56 @@ class YamlModelsLoader(object):
         mod.yaml = yaml_mod
         sys.modules[yaml_fullname] = yaml_mod
 
-        #def extend_module(module, module_name, attrs):
-            #mod_name = '.'.join(yaml_fullname, module_name)
-            #mod = imp.new_module(mod_name)
-            #sys.modules[mod_name] = mod
-            #mod.__file__ = self.yaml_filename
-            #mod.__dict__.update(attrs if not callable(attrs) else attrs())
-            #setattr(yaml_mod, module_name, mod)
+        def extend_module(module_name, extender, params=None):
+            if params is None:
+                params = ()
+            mod_name = '.'.join([yaml_fullname, module_name, ])
+            mod = imp.new_module(mod_name)
+            sys.modules[mod_name] = mod
+            mod.__file__ = self.yaml_filename
+            if extender is not None:
+                mod.__dict__.update(extender(*params))
+            return mod
 
-        ##models = self.get_models()
-        #extend_module('models', self.get_models)
-        #extend_module('admin', self.get_admin(models))
-        #extend_module('migrations', {})
-        #extend_module('views', self.get_views(models))
-
-
-
-        models_mod = imp.new_module(yaml_fullname+'.models')
-        models_mod.__file__ = self.yaml_filename
-        sys.modules[yaml_fullname+'.models'] = models_mod
-        models_dict = self.get_models()
-        models_mod.__dict__.update(models_dict)
-
-        admin_mod = imp.new_module(yaml_fullname+'.admin')
-        admin_mod.__file__ = self.yaml_filename
-        admin_dict = self.get_admin(models_dict)
-        admin_mod.__dict__.update(admin_dict)
-        sys.modules[yaml_fullname+'.admin'] = admin_mod
-
-
-        views_mod = imp.new_module(yaml_fullname+'.views')
-        views_mod.__file__ = self.yaml_filename
-        views_dict = self.get_views(models_dict)
-        views_mod.__dict__.update(views_dict)
-        sys.modules[yaml_fullname+'.views'] = views_mod
-
-        migrations_mod = imp.new_module(yaml_fullname+'.migrations')
-        migrations_mod.__file__ = os.path.join(
+        yaml_mod.models = extend_module('models', self.get_models, {})
+        yaml_mod.admin = extend_module('admin',
+            self.get_admin, (self.get_models(), ))
+        yaml_mod.migrations = extend_module('migrations',
+            None, (self.get_models() ,))
+        yaml_mod.migrations.__file__ = os.path.join(
             os.path.dirname(self.yaml_filename),
-            'migrations.__init__.py')
-        print migrations_mod.__file__
-        sys.modules[yaml_fullname+'.migrations'] = migrations_mod
+            'migrations')
+        yaml_mod.views = extend_module('views',
+            self.get_views, (self.get_models(), ))
 
-        yaml_mod.models = models_mod
-        yaml_mod.admin = admin_mod
-        yaml_mod.migrations = migrations_mod
-        yaml_mod.views = views_mod
+
+        #models_mod = imp.new_module(yaml_fullname+'.models')
+        #models_mod.__file__ = self.yaml_filename
+        #sys.modules[yaml_fullname+'.models'] = models_mod
+        #models_dict = self.get_models()
+        #models_mod.__dict__.update(models_dict)
+
+        #admin_mod = imp.new_module(yaml_fullname+'.admin')
+        #admin_mod.__file__ = self.yaml_filename
+        #admin_dict = self.get_admin(models_dict)
+        #admin_mod.__dict__.update(admin_dict)
+        #sys.modules[yaml_fullname+'.admin'] = admin_mod
+
+
+        #views_mod = imp.new_module(yaml_fullname+'.views')
+        #views_mod.__file__ = self.yaml_filename
+        #views_dict = self.get_views(models_dict)
+        #views_mod.__dict__.update(views_dict)
+        #sys.modules[yaml_fullname+'.views'] = views_mod
+
+        #migrations_mod = imp.new_module(yaml_fullname+'.migrations')
+        #print migrations_mod.__file__
+        #sys.modules[yaml_fullname+'.migrations'] = migrations_mod
+
+        #yaml_mod.models = models_mod
+        #yaml_mod.admin = admin_mod
+        #yaml_mod.migrations = migrations_mod
+        #yaml_mod.views = views_mod
         return mod
 
 
