@@ -130,11 +130,12 @@ class YamlModelsLoader(object):
         from django.conf.urls import url
 
         patterns = [
-            url(r'^$', '%s.views.%s' % (
+            url(r'^%s/$' % model._meta.db_table, '%s.views.%s' % (
                 model.__module__.rsplit('.', 1)[0],
                 model._meta.db_table+'_list_view'
             )) for model_name, model in models_dict.items()
         ]
+
         result = {
             'urlpatterns':patterns
         }
@@ -170,20 +171,10 @@ class YamlModelsLoader(object):
         yaml_mod.admin.__dict__.update(self.get_admin(models_dict))
 
         try:
-            #migrations = __import__('task.migrations')
             import task.migrations
             yaml_mod.migrations = task.migrations
-            # mod_name = '.'.join([yaml_fullname, 'migrations', ])
-            # sys.modules[mod_name] = migrations
-            # yaml_mod.migrations.__file__ = os.path.join(
-            #     os.path.dirname(self.yaml_filename),
-            #     'migrations' , '__init__.py')
         except ImportError:
             pass
-            #yaml_mod.migrations = extend_module('migrations')
-
-
-
 
         yaml_mod.views = extend_module('views')
         yaml_mod.views.__dict__.update(self.get_views(models_dict))

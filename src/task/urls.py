@@ -34,7 +34,8 @@ def get_smyt_models():
 def smyt_items_json_view(request):
     items = [{
         'title': mdl._meta.verbose_name,
-        'url': '/'+mdl._meta.db_table
+        'url': '/'+mdl._meta.db_table,
+        'fields': [{fld: mdl._meta.get_field(fld).get_internal_type()} for fld in mdl._meta.get_all_field_names()]
     } for mdl in get_smyt_models()]
     data = json.dumps(items)
     return HttpResponse(data, mimetype='application/json')
@@ -45,8 +46,7 @@ urlpatterns += [
 ]
 
 urlpatterns += [
-  url(r'^smyt_items/%s/' % mdl._meta.db_table, include(
-      mdl.__module__.rsplit('.', 1)[0]+'.urls')) for mdl in get_smyt_models()
+  url(r'^smyt_items/', include(mdl.__module__.rsplit('.', 1)[0]+'.urls')) for mdl in get_smyt_models()
 ]
 
 
