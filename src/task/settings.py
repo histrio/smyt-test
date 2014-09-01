@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 
 PROJECT_APPS = (
     'smytmodels.yaml',
+    'othermodels.yaml',
 )
 
 INSTALLED_APPS = (

@@ -52,13 +52,16 @@ def get_attr(title, fields):
 from django.core import serializers
 from django.http import HttpResponse
 
-class JsonResponseMixin(object):
+class SmytResponseMixin(object):
     """ Return json
     """
     def render_to_response(self, context):
-        queryset = self.model.objects.all()
-        data = serializers.serialize('json', queryset)
-        return HttpResponse(data, content_type='application/json')
+        if self.request.method == 'GET':
+            queryset = self.model.objects.all()
+            data = serializers.serialize('json', queryset)
+            return HttpResponse(data, content_type='application/json')
+        elif self.request.method == 'POST':
+            return HttpResponse("{}", content_type='application/json')
 
 
 class YamlModelsLoader(object):
@@ -116,7 +119,7 @@ class YamlModelsLoader(object):
         result = {}
         from django.views.generic.list import BaseListView
         for model_name, model in models_dict.items():
-            list_view = type(model_name+'ListView', (JsonResponseMixin, BaseListView, ), {
+            list_view = type(model_name+'ListView', (SmytResponseMixin, BaseListView, ), {
                 'model': model
             })
             result[model_name+'ListView'] = list_view
@@ -166,10 +169,21 @@ class YamlModelsLoader(object):
         yaml_mod.admin = extend_module('admin')
         yaml_mod.admin.__dict__.update(self.get_admin(models_dict))
 
-        # yaml_mod.migrations = extend_module('migrations')
-        # yaml_mod.migrations.__file__ = os.path.join(
-        #     os.path.dirname(self.yaml_filename),
-        #     'migrations')
+        try:
+            #migrations = __import__('task.migrations')
+            import task.migrations
+            yaml_mod.migrations = task.migrations
+            # mod_name = '.'.join([yaml_fullname, 'migrations', ])
+            # sys.modules[mod_name] = migrations
+            # yaml_mod.migrations.__file__ = os.path.join(
+            #     os.path.dirname(self.yaml_filename),
+            #     'migrations' , '__init__.py')
+        except ImportError:
+            pass
+            #yaml_mod.migrations = extend_module('migrations')
+
+
+
 
         yaml_mod.views = extend_module('views')
         yaml_mod.views.__dict__.update(self.get_views(models_dict))
