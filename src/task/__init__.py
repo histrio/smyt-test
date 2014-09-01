@@ -7,11 +7,16 @@ Description: hail pep302
 import imp
 import os.path
 import sys
-import yaml
+from functools import partial
 
+import yaml
 from django.db import models
 from django.contrib.admin import ModelAdmin, site
-from functools import partial
+from django.core import serializers
+from django.http import HttpResponse
+from django.conf.urls import url
+from django.views.generic.list import BaseListView
+
 
 class SmytException(Exception):
     pass
@@ -49,8 +54,7 @@ def get_attr(title, fields):
     result['Meta'] = meta
     return result
 
-from django.core import serializers
-from django.http import HttpResponse
+
 
 class SmytResponseMixin(object):
     """ Return json
@@ -117,7 +121,6 @@ class YamlModelsLoader(object):
 
     def get_views(self, models_dict):
         result = {}
-        from django.views.generic.list import BaseListView
         for model_name, model in models_dict.items():
             list_view = type(model_name+'ListView', (SmytResponseMixin, BaseListView, ), {
                 'model': model
@@ -127,19 +130,14 @@ class YamlModelsLoader(object):
         return result
 
     def get_urls(self, models_dict):
-        from django.conf.urls import url
-
-        patterns = [
-            url(r'^%s/$' % model._meta.db_table, '%s.views.%s' % (
-                model.__module__.rsplit('.', 1)[0],
-                model._meta.db_table+'_list_view'
-            )) for model_name, model in models_dict.items()
-        ]
-
-        result = {
-            'urlpatterns':patterns
+        return {
+            'urlpatterns': [
+                url(r'^%s/$' % model._meta.db_table, '%s.views.%s' % (
+                    model.__module__.rsplit('.', 1)[0],
+                    model._meta.db_table+'_list_view'
+                )) for model_name, model in models_dict.items()
+            ]
         }
-        return result
 
 
     def load_module(self, fullname):
