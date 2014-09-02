@@ -46,7 +46,7 @@ INSTALLED_APPS = (
 ) + PROJECT_APPS
 
 if not DEBUG:
-    INSTALLED_APPS += ['gunicorn', ]
+    INSTALLED_APPS += ('gunicorn', )
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',

@@ -9,8 +9,6 @@ import os.path
 import sys
 import yaml
 
-from django.db import models
-from django.contrib.admin import ModelAdmin, site
 from functools import partial
 
 class SmytException(Exception):
@@ -20,10 +18,11 @@ class SmytException(Exception):
 def get_field(id, title, type):
     """ Return appropriate field or raise error
     """
+    from django.db.models import CharField, IntegerField, DateField
     mapping = {
-        'char': partial(models.CharField, max_length=20),
-        'int': models.IntegerField,
-        'date': models.DateField,
+        'char': partial(CharField, max_length=20),
+        'int': IntegerField,
+        'date': DateField,
     }
     try:
         field = mapping[type](verbose_name=title)
@@ -49,13 +48,13 @@ def get_attr(title, fields):
     result['Meta'] = meta
     return result
 
-from django.core import serializers
-from django.http import HttpResponse
 
 class SmytResponseMixin(object):
     """ Return json
     """
     def render_to_response(self, context):
+        from django.core import serializers
+        from django.http import HttpResponse
         if self.request.method == 'GET':
             queryset = self.model.objects.all()
             data = serializers.serialize('json', queryset)
@@ -76,10 +75,10 @@ class YamlModelsLoader(object):
 
     def find_module(self, fullname, paths=None):
         for path in (paths or ['./task/', ]):
-            self.fullname = fullname
             filename = os.path.join(
                 path, "%s.yaml" % fullname.rsplit('.')[-1])
             if os.path.isfile(filename):
+                self.fullname = fullname
                 self.yaml_filename = filename
                 return self
         return None
@@ -99,13 +98,16 @@ class YamlModelsLoader(object):
             except TypeError as err:
                 raise SmytException('Invalid yaml file format.')
             attrs.update({
-                '__module__':self.fullname+'.yaml.models'
+                '__module__': self.fullname + '.yaml.models'
             })
-            model = type(model_name, (models.Model, ), attrs)
+            from django.db.models import Model
+            print model_name
+            model = type(model_name, (Model, ), attrs)
             result[model_name] = model
         return result
 
     def get_admin(self, models_dict):
+        from django.contrib.admin import ModelAdmin, site
         result = {}
         for model_name, model in models_dict.items():
             model_admin = type(model_name + 'Admin', (ModelAdmin, ), {
