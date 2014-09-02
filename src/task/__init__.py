@@ -11,6 +11,7 @@ import yaml
 
 from functools import partial
 
+
 class SmytException(Exception):
     pass
 
@@ -74,9 +75,9 @@ class YamlModelsLoader(object):
     models_dict = None
 
     def find_module(self, fullname, paths=None):
-        for path in (paths or ['./task/', ]):
-            filename = os.path.join(
-                path, "%s.yaml" % fullname.rsplit('.')[-1])
+        for path in (paths or sys.path+[os.path.dirname(__file__),]):
+            filename = os.path.abspath(os.path.join(
+                path, "%s.yaml" % fullname.rsplit('.')[-1]))
             if os.path.isfile(filename):
                 self.fullname = fullname
                 self.yaml_filename = filename
@@ -90,20 +91,19 @@ class YamlModelsLoader(object):
                 data = yaml.load(f)
             except yaml.YAMLError as err:
                 raise SmytException('YAML file parsing error: %s' % err)
-
-        for table, params in data.items():
-            model_name = '%sModel' % table.capitalize()
-            try:
-                attrs = get_attr(**params)
-            except TypeError as err:
-                raise SmytException('Invalid yaml file format.')
-            attrs.update({
-                '__module__': self.fullname + '.yaml.models'
-            })
-            from django.db.models import Model
-            print model_name
-            model = type(model_name, (Model, ), attrs)
-            result[model_name] = model
+        if data:
+            for table, params in data.items():
+                model_name = '%sModel' % table.capitalize()
+                try:
+                    attrs = get_attr(**params)
+                except TypeError as err:
+                    raise SmytException('Invalid yaml file format.')
+                attrs.update({
+                    '__module__': self.fullname + '.yaml.models'
+                })
+                from django.db.models import Model
+                model = type(model_name, (Model, ), attrs)
+                result[model_name] = model
         return result
 
     def get_admin(self, models_dict):
@@ -111,7 +111,7 @@ class YamlModelsLoader(object):
         result = {}
         for model_name, model in models_dict.items():
             model_admin = type(model_name + 'Admin', (ModelAdmin, ), {
-                '__module__': self.fullname+'.yaml.admin',
+                '__module__': self.fullname + '.yaml.admin',
             })
             result[model_name + 'Admin'] = model_admin
             site.register(model, model_admin)
@@ -121,11 +121,13 @@ class YamlModelsLoader(object):
         result = {}
         from django.views.generic.list import BaseListView
         for model_name, model in models_dict.items():
-            list_view = type(model_name+'ListView', (SmytResponseMixin, BaseListView, ), {
-                'model': model
-            })
-            result[model_name+'ListView'] = list_view
-            result[model._meta.db_table+'_list_view'] = list_view.as_view()
+            list_view = type(model_name + 'ListView',
+                (SmytResponseMixin, BaseListView, ), {
+                    'model': model
+                }
+            )
+            result[model_name + 'ListView'] = list_view
+            result[model._meta.db_table + '_list_view'] = list_view.as_view()
         return result
 
     def get_urls(self, models_dict):
@@ -134,15 +136,14 @@ class YamlModelsLoader(object):
         patterns = [
             url(r'^%s/$' % model._meta.db_table, '%s.views.%s' % (
                 model.__module__.rsplit('.', 1)[0],
-                model._meta.db_table+'_list_view'
+                model._meta.db_table + '_list_view'
             )) for model_name, model in models_dict.items()
         ]
 
         result = {
-            'urlpatterns':patterns
+            'urlpatterns': patterns
         }
         return result
-
 
     def load_module(self, fullname):
         if fullname in sys.modules:

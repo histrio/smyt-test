@@ -1,0 +1,10 @@
+firsttesttable:
+    title: Test title
+    fields:
+        - {id: code, title: Код, type: int}
+        - {id: name, title: Наименование, type: char}
+        - {id: date, title: Дата, type: date}
+secondtesttable:
+    title: Another test title
+    fields:
+        - {id: some_value, title: some value, type: int}
