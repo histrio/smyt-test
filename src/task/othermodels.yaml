@@ -1,0 +1,6 @@
+languages:
+    title: Языки
+    fields:
+        - {id: code, title: Код, type: char}
+        - {id: name, title: Наименование, type: char}
+        - {id: priority, title: Приоритет, type: int}
