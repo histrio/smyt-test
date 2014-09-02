@@ -17,8 +17,7 @@ if settings.DEBUG:
     document_root = os.path.abspath(os.path.join(
         settings.BASE_DIR, '../public_html'))
     urlpatterns += static('/assets/',
-        document_root=document_root+'/assets')
+        document_root=document_root + '/assets')
     urlpatterns += static('/',
         path='index.html',
-        #show_indexes=True,
         document_root=document_root)
