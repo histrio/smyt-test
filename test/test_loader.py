@@ -4,8 +4,11 @@ import os
 import django.conf
 from unittest import TestCase
 
+from task import SmytException
+from nose.tools import raises
+
 sys.path.insert(0, os.path.abspath('./src'))
-os.environ['DJANGO_SETTINGS_MODULE']='mysite.settings'
+os.environ['DJANGO_SETTINGS_MODULE']='task.settings'
 
 class YamlLoaderTest(TestCase):
 
@@ -49,3 +52,78 @@ class YamlLoaderTest(TestCase):
 
     def test_urls(self):
         from test.app.yaml import urls
+
+class EmptyYamlLoaderTest(TestCase):
+
+    def setUp(self):
+        if not django.conf.settings.configured:
+            django.conf.settings.configure(
+                default_settings=django.conf.global_settings,
+                INSTALLED_APPS=[
+                    'test.empty.yaml',
+                ]
+            )
+
+    def test_models(self):
+        from test.app.yaml import models
+
+class InvalidOneYamlLoaderTest(TestCase):
+
+    def setUp(self):
+        if not django.conf.settings.configured:
+            django.conf.settings.configure(
+                default_settings=django.conf.global_settings,
+                INSTALLED_APPS=[
+                    'test.invalid01.yaml',
+                ]
+            )
+
+    @raises(SmytException)
+    def test_models(self):
+        from test.invalid01.yaml import models
+
+class InvalidTwoYamlLoaderTest(TestCase):
+
+    def setUp(self):
+        if not django.conf.settings.configured:
+            django.conf.settings.configure(
+                default_settings=django.conf.global_settings,
+                INSTALLED_APPS=[
+                    'test.invalid02.yaml',
+                ]
+            )
+
+    @raises(SmytException)
+    def test_models(self):
+        from test.invalid02.yaml import models
+
+
+class InvalidThreeYamlLoaderTest(TestCase):
+
+    def setUp(self):
+        if not django.conf.settings.configured:
+            django.conf.settings.configure(
+                default_settings=django.conf.global_settings,
+                INSTALLED_APPS=[
+                    'test.invalid03.yaml',
+                ]
+            )
+
+    @raises(SmytException)
+    def test_models(self):
+        from test.invalid03.yaml import models
+
+class InvalidFourYamlLoaderTest(TestCase):
+
+    def setUp(self):
+        if not django.conf.settings.configured:
+            django.conf.settings.configure(
+                default_settings=django.conf.global_settings,
+                INSTALLED_APPS=[
+                    'test.invalid04.yaml',
+                ]
+            )
+
+    @raises(SmytException)
+    def test_models(self):
+        from test.invalid04.yaml import models

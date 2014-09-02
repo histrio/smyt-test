@@ -91,19 +91,20 @@ class YamlModelsLoader(object):
                 data = yaml.load(f)
             except yaml.YAMLError as err:
                 raise SmytException('YAML file parsing error: %s' % err)
-        if data:
-            for table, params in data.items():
-                model_name = '%sModel' % table.capitalize()
-                try:
-                    attrs = get_attr(**params)
-                except TypeError as err:
-                    raise SmytException('Invalid yaml file format.')
-                attrs.update({
-                    '__module__': self.fullname + '.yaml.models'
-                })
-                from django.db.models import Model
-                model = type(model_name, (Model, ), attrs)
-                result[model_name] = model
+        if not data:
+            return result
+        for table, params in data.items():
+            model_name = '%sModel' % table.capitalize()
+            try:
+                attrs = get_attr(**params)
+            except TypeError as err:
+                raise SmytException('Invalid yaml file format.')
+            attrs.update({
+                '__module__': self.fullname + '.yaml.models'
+            })
+            from django.db.models import Model
+            model = type(model_name, (Model, ), attrs)
+            result[model_name] = model
         return result
 
     def get_admin(self, models_dict):
