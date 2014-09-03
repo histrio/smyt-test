@@ -47,5 +47,9 @@ class RequetsTest(TestCase):
                 data={'id': 1, 'spots': '2', 'department': 'test'})
         assert json.loads(response.content)['success'] is True
 
+        response = self.client.post("/smyt_items/yaml_roomsmodel/",
+                data={'spots': '2', 'department': 'test'})
+        assert json.loads(response.content)['success'] is True
+
         from smytmodels.yaml import models
-        assert models.RoomsModel.objects.all().count() == 1
+        assert models.RoomsModel.objects.all().count() == 2

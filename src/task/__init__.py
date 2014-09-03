@@ -81,7 +81,7 @@ class SmytResponseMixin(object):
                 obj = self.model()
             obj.__dict__.update(**data.dict())
         else:
-            obj = self.model.objects.create(**data)
+            obj = self.model.objects.create(**data.dict())
         return obj
 
     def post(self, request, *args, **kwargs):
