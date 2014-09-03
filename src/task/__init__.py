@@ -74,22 +74,21 @@ class SmytResponseMixin(object):
         return HttpResponse(data, content_type='application/json')
 
     def bind_from(self, data):
-        #if 'id' in data:
-            #try:
-                #obj = self.model.objects.get(id=_id)
-            #except self.model.DoesNotExist:
-                #obj = self.model()
-            #obj.__dict__.update(**data)
-        #else:
-            #obj = self.model.objects.create(**data)
-        return None
-
+        if 'id' in data:
+            try:
+                obj = self.model.objects.get(id=data.get('id'))
+            except self.model.DoesNotExist:
+                obj = self.model()
+            obj.__dict__.update(**data.dict())
+        else:
+            obj = self.model.objects.create(**data)
+        return obj
 
     def post(self, request, *args, **kwargs):
         result = {'success': True, 'message': 'Record saved'}
         try:
             obj = self.bind_from(request.POST.copy())
-            #obj.save()
+            obj.save()
         except self.PostRequestException as err:
             result = {'success': False, 'message': "Saving error: %s" % err}
 
@@ -141,13 +140,17 @@ class YamlModelsLoader(object):
 
     def get_admin(self, models_dict):
         from django.contrib.admin import ModelAdmin, site
+        from django.contrib.admin.sites import AlreadyRegistered
         result = {}
         for model_name, model in models_dict.items():
             model_admin = type(model_name + 'Admin', (ModelAdmin, ), {
                 '__module__': self.fullname + '.yaml.admin',
             })
             result[model_name + 'Admin'] = model_admin
-            site.register(model, model_admin)
+            try:
+                site.register(model, model_admin)
+            except AlreadyRegistered:
+                pass
         return result
 
     def get_views(self, models_dict):
