@@ -8,8 +8,18 @@ import imp
 import os.path
 import sys
 import yaml
+import json
 
 from functools import partial
+from django.http import HttpResponse
+
+VERSION = (0, 0, 1, 'rc', 1)
+
+
+def get_version(version=None):
+    "Returns a PEP 386-compliant version number from VERSION."
+    if version is None:
+        version = VERSION
 
 
 class SmytException(Exception):
@@ -51,17 +61,39 @@ def get_attr(title, fields):
 
 
 class SmytResponseMixin(object):
-    """ Return json
+    """ Unified view for get / create / update requests
     """
-    def render_to_response(self, context):
+    class PostRequestException(Exception):
+        pass
+
+    def get(self, request, *args, **kwargs):
         from django.core import serializers
         from django.http import HttpResponse
-        if self.request.method == 'GET':
-            queryset = self.model.objects.all()
-            data = serializers.serialize('json', queryset)
-            return HttpResponse(data, content_type='application/json')
-        elif self.request.method == 'POST':
-            return HttpResponse("{}", content_type='application/json')
+        queryset = self.model.objects.all()
+        data = serializers.serialize('json', queryset)
+        return HttpResponse(data, content_type='application/json')
+
+    def bind_from(self, data):
+        #if 'id' in data:
+            #try:
+                #obj = self.model.objects.get(id=_id)
+            #except self.model.DoesNotExist:
+                #obj = self.model()
+            #obj.__dict__.update(**data)
+        #else:
+            #obj = self.model.objects.create(**data)
+        return None
+
+
+    def post(self, request, *args, **kwargs):
+        result = {'success': True, 'message': 'Record saved'}
+        try:
+            obj = self.bind_from(request.POST.copy())
+            #obj.save()
+        except self.PostRequestException as err:
+            result = {'success': False, 'message': "Saving error: %s" % err}
+
+        return HttpResponse(json.dumps(result), content_type='application/json')
 
 
 class YamlModelsLoader(object):
@@ -75,7 +107,7 @@ class YamlModelsLoader(object):
     models_dict = None
 
     def find_module(self, fullname, paths=None):
-        for path in (paths or sys.path+[os.path.dirname(__file__),]):
+        for path in (paths or sys.path + [os.path.dirname(__file__), ]):
             filename = os.path.abspath(os.path.join(
                 path, "%s.yaml" % fullname.rsplit('.')[-1]))
             if os.path.isfile(filename):
@@ -120,10 +152,10 @@ class YamlModelsLoader(object):
 
     def get_views(self, models_dict):
         result = {}
-        from django.views.generic.list import BaseListView
         for model_name, model in models_dict.items():
+            from django.views.generic.base import View
             list_view = type(model_name + 'ListView',
-                (SmytResponseMixin, BaseListView, ), {
+                (SmytResponseMixin, View), {
                     'model': model
                 }
             )
