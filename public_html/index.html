@@ -44,6 +44,8 @@
 	<!-- concatenate and minify for production -->
 	<link rel="stylesheet" href="assets/css/reset.css" />
 	<link rel="stylesheet" href="assets/css/style.css" />
+
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/smoothness/jquery-ui.css" />
 	
 	<!-- Lea Verou's Prefix Free, lets you use un-prefixed properties in your CSS files -->
 	<script src="assets/js/libs/prefixfree.min.js"></script>
@@ -95,55 +97,11 @@
 	
 	<article>
 		
-		<h1>Пользователи</h1>
-        <table>
-            <tr>
-                <th>id</th>
-                <th>Имя</th>
-                <th>Зарплата</th>
-                <th>Дата поступления на работу</th>
-            </tr>
-            <tr>
-                <td>1</td>
-                <td>name1</td>
-                <td>100</td>
-                <td>21.03.1222</td>
-            </tr>
-            <tr>
-                <td>2</td>
-                <td>name2</td>
-                <td>101</td>
-                <td>22.03.1222</td>
-            </tr>
-        </table>
+		<!--<h1>Пользователи</h1>-->
+        <div id='table'> </div>
 
+        <div id='form'> </div>
 
-
-        <form action="">
-        <fieldset>
-        <legend>Новый пользователь</legend>
-
-        <div>
-          <label for="name">Имя:</label>
-          <input name="name" type="text" required>
-        </div>
-        <div>
-          <label for="email">Зарплата:</label>
-
-          <input name="email" type="email" required>
-        </div>
-        <div>
-          <label for="message">Дата поступления:</label>
-          <input name="date" type="date" required>
-        </div>
-        <div>
-          <input name="send" type="submit" value="Send">
-        </div>
-        </fieldset>
-        </form>
-
-		
-	
 	</article>
 	
 	<aside>
@@ -162,6 +120,7 @@
 
 <!-- Grab Google CDN's jQuery. fall back to local if necessary -->
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="//code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
 <script>window.jQuery || document.write("<script src='assets/js/libs/jquery-1.11.0.min.js'>\x3C/script>")</script>
 
 <!-- this is where we put our custom functions -->

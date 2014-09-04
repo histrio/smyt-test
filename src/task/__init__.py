@@ -12,6 +12,7 @@ import json
 
 from functools import partial
 from django.http import HttpResponse
+from django.core.exceptions import ValidationError
 
 VERSION = (0, 0, 1, 'rc', 1)
 
@@ -87,9 +88,12 @@ class SmytResponseMixin(object):
     def post(self, request, *args, **kwargs):
         result = {'success': True, 'message': 'Record saved'}
         try:
-            obj = self.bind_from(request.POST.copy())
-            obj.save()
-        except self.PostRequestException as err:
+            try:
+                obj = self.bind_from(request.POST.copy())
+                obj.save()
+            except ValueError as err:
+                raise self.PostRequestException("Invaid field: %s" % err)
+        except (self.PostRequestException, ValidationError) as err:
             result = {'success': False, 'message': "Saving error: %s" % err}
 
         return HttpResponse(json.dumps(result), content_type='application/json')
@@ -163,8 +167,8 @@ class YamlModelsLoader(object):
                 }
             )
             result[model_name + 'ListView'] = list_view
-            result[model._meta.db_table + '_list_view'] = list_view.as_view()
-            print result.keys()
+            from django.views.decorators.csrf import csrf_exempt
+            result[model._meta.db_table + '_list_view'] = csrf_exempt(list_view.as_view())
         return result
 
     def get_urls(self, models_dict):

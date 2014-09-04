@@ -37,8 +37,11 @@ def smyt_items_json_view(request):
     items = [{
         'title': mdl._meta.verbose_name,
         'url': ROOT_URL + mdl._meta.db_table,
+        'name': mdl._meta.db_table,
         'fields': [{
-            fld: mdl._meta.get_field(fld).get_internal_type()
+            "name": fld,
+            "type": mdl._meta.get_field(fld).get_internal_type(),
+            "title": mdl._meta.get_field(fld).verbose_name
         } for fld in mdl._meta.get_all_field_names()]
     } for mdl in get_smyt_models()]
     data = json.dumps(items)
