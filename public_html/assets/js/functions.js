@@ -8,27 +8,47 @@
 // sample CSS: html[data-useragent*='Chrome/13.0'] { ... }
 
 
-// remap jQuery to $
-(function($){
 
-	/* trigger when page is ready */
-	$(document).ready(function (){
-	
-		// your functions go here
-	
-	});
-	
-	
-	/* optional triggers
-	
-	$(window).load(function() {
-		
-	});
-	
-	$(window).resize(function() {
-		
-	});
-	
-	*/
+(function(code) {
 
-})(window.jQuery);
+    code(window.jQuery, window, document);
+
+}(function($, window, document) {
+
+    function getTablesList(){
+        return $.ajax({
+            url: "/smyt_items/",
+            type: "get"
+        });
+    }
+
+    function getTableData(item){
+        return $.ajax({
+            url:item.href,
+            type:"get"
+        });
+    }
+
+    $(function() {
+     
+        getTablesList().done(function(data){
+            var list = $("ol.tables"),
+                listItems = "";
+            $.each(data, function(index, value){
+                var link = "<a href=" + value.url + ">" + value.title +"</a>"
+                listItems += "<li>" + link + "</li>";
+            });
+            list.append(listItems);
+            
+            list.on("click", "li", function(e){
+                e.preventDefault();
+                getTableData(e.target).done(function(data){
+                    console.log(data);
+                })
+            })
+
+        });
+
+    });
+
+}));

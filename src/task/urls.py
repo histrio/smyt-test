@@ -18,6 +18,7 @@ urlpatterns = patterns('',
 )
 
 MODELS_CACHE = None
+ROOT_URL = 'smyt_items/'
 
 
 def get_smyt_models():
@@ -35,7 +36,7 @@ def get_smyt_models():
 def smyt_items_json_view(request):
     items = [{
         'title': mdl._meta.verbose_name,
-        'url': '/' + mdl._meta.db_table,
+        'url': ROOT_URL + mdl._meta.db_table,
         'fields': [{
             fld: mdl._meta.get_field(fld).get_internal_type()
         } for fld in mdl._meta.get_all_field_names()]
@@ -45,13 +46,12 @@ def smyt_items_json_view(request):
 
 
 urlpatterns += [
-    url(r'^smyt_items/$', smyt_items_json_view),
+    url(r'^%s$' % ROOT_URL, smyt_items_json_view),
 ]
 
+#FIXME: ugly thing, but works
 urlpatterns += [
-    url(r'^smyt_items/',
-        include(mdl.__module__.rsplit('.', 1)[0] + '.urls')
-    ) for mdl in get_smyt_models()
+    url(r'^' + ROOT_URL + mdl._meta.db_table, mdl.__module__.rsplit('.', 1)[0] + '.views.' + mdl._meta.db_table + '_list_view') for mdl in get_smyt_models()
 ]
 
 

@@ -164,6 +164,7 @@ class YamlModelsLoader(object):
             )
             result[model_name + 'ListView'] = list_view
             result[model._meta.db_table + '_list_view'] = list_view.as_view()
+            print result.keys()
         return result
 
     def get_urls(self, models_dict):
