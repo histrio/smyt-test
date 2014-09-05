@@ -78,7 +78,6 @@
                                     data[fld] = $(this).text();
                                 });
                                 data['id'] = cRow.attr('id')
-                                console.log(data);
                                 $.ajax({ 
                                     url   : form.attr('action'),
                                     type  : form.attr('method'),
@@ -111,6 +110,7 @@
 
             $("#form").html(form).submit(
                 function (e){
+                    var self = this;
                     $.ajax({ 
                         url   : form.attr('action'),
                         type  : form.attr('method'),
@@ -119,6 +119,7 @@
                             if (!response.success){
                                 alert(response.message);
                             } else {
+                                $(self).unbind();
                                 $("#form").empty();
                                 $("#table").empty();
                             }
