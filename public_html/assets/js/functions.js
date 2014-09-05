@@ -39,7 +39,9 @@
             type:'text'
         });
         if (fld.type=="DateField"){
-            field.datepicker();
+            field.datepicker({
+                dateFormat: 'yy-mm-dd'
+            });
         }
         return field
     }
@@ -59,20 +61,39 @@
                 $("<th>").append(value.title).appendTo(head);
             });
             table.append(head);
-
             $.each(data, function(index, value){
                 var row = $("<tr>", {id:value.pk});
-                $.each(table_meta, function(index, field_name){
-                    var td = $("<td>").append(value.fields[field_name.name]).appendTo(row)
-                    td.on(
-                        "click", function(e){
-                            var fld = getField(field_name).val($(this).html());
-                            fld.on('blur', function(e){
-                                $(this).replaceWith(td.html($(this).val()));
-                            });
-                            $(this).replaceWith(fld)
-                            fld.focus();
+                $.each(table_fields, function(index, field_name){
+                    var td = $("<td>",{class:field_name.name}).append(value.fields[field_name.name]).appendTo(row)
+                        , cRow = td.parent()
+                    td.on("click", function(e){
+                        var fld = getField(field_name).val($(this).html());
+                        fld.on('blur', function(e){
+                            var fld = $(this);
+                            setTimeout(function() {
+                                fld.replaceWith(td.html(fld.val()));
+                                var data = {};
+                                cRow.find('td').each(function(item, value){
+                                    var fld = $(this).attr('class');
+                                    data[fld] = $(this).text();
+                                });
+                                data['id'] = cRow.attr('id')
+                                console.log(data);
+                                $.ajax({ 
+                                    url   : form.attr('action'),
+                                    type  : form.attr('method'),
+                                    data  : data, 
+                                    success: function(response){
+                                        if (!response.success){
+                                            alert(response.message);
+                                        }
+                                    }
+                                });
+                            }, 200);
                         });
+                        $(this).replaceWith(fld)
+                        fld.focus();
+                    });
                 });
                 table.append(row);
             });
@@ -83,21 +104,17 @@
                 $("<label>",{
                     for:value.name
                 }).append(value.title).appendTo(form);
-                //div.append(field);
                 form.append(div);
             });
 
-            $("<input>",{
-                type:"submit",
-                value:"Save",
-            }).appendTo(form);
+            $("<input>", {type:"submit", value:"Save"}).appendTo(form);
 
             $("#form").html(form).submit(
                 function (e){
                     $.ajax({ 
                         url   : form.attr('action'),
                         type  : form.attr('method'),
-                        data  : form.serialize(), // data to be submitted
+                        data  : form.serialize(), 
                         success: function(response){
                             if (!response.success){
                                 alert(response.message);
