@@ -120,8 +120,7 @@
                                 alert(response.message);
                             } else {
                                 $(self).unbind();
-                                $("#form").empty();
-                                $("#table").empty();
+                                updateForm(item);
                             }
                         }
                     });
