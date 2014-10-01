@@ -14,6 +14,7 @@ from functools import partial
 from django.http import HttpResponse
 from django.core.exceptions import ValidationError
 
+
 VERSION = (0, 0, 1, 'rc', 1)
 
 
@@ -25,6 +26,14 @@ def get_version(version=None):
 
 class SmytException(Exception):
     pass
+
+
+def save(self, *args, **kwargs):
+    for fld in self.__class__._meta.get_all_field_names():
+        value = getattr(self, fld)
+        if fld != 'id' and not value:
+            raise ValidationError("Field `%s` is empty" % fld)
+    super(self.__class__, self).save(*args, **kwargs)
 
 
 def get_field(id, title, type):
@@ -58,6 +67,7 @@ def get_attr(title, fields):
         'verbose_name': title,
     })
     result['Meta'] = meta
+    result['save'] = save
     return result
 
 
